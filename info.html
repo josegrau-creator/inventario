@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Información de Inventario</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f6f8;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+    }
+    .card {
+      background: #ffffff;
+      padding: 24px;
+      border-radius: 8px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      width: 100%;
+      max-width: 400px;
+    }
+    .item-title {
+      font-size: 1.25rem;
+      font-weight: bold;
+      color: #333;
+      margin-bottom: 12px;
+      border-bottom: 2px solid #007bff;
+      padding-bottom: 8px;
+    }
+    .item-detail {
+      margin-bottom: 8px;
+      color: #555;
+    }
+    .status {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 4px;
+      background: #e2e8f0;
+      font-size: 0.875rem;
+      font-weight: bold;
+    }
+    .loading { color: #888; text-align: center; }
+    .error { color: #d9534f; text-align: center; }
+  </style>
+</head>
+<body>
+
+  <div class="card" id="app">
+    <p class="loading">Cargando datos del inventario...</p>
+  </div>
+
+  <script>
+    // URL de tu Google Apps Script
+    const BACKEND_URL = "https://script.google.com/a/macros/binnacorp.com/s/AKfycbzHzKuqwcGdbAKFMQmvIlBfs516o83-hlCnA8Ao7JclYfuoa2aOgaIpiJH3H4l3DfgM/exec";
+
+    // Obtener el parámetro 'codigo' de la URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const codigo = urlParams.get('codigo');
+
+    const appContainer = document.getElementById('app');
+
+    if (!codigo) {
+      appContainer.innerHTML = `<p class="error">⚠️ No se especificó ningún código en la URL.</p>`;
+    } else {
+      fetch(`${BACKEND_URL}?codigo=${encodeURIComponent(codigo)}`)
+        .then(response => response.json())
+        .then(res => {
+          if (res.success) {
+            const data = res.data;
+            appContainer.innerHTML = `
+              <div class="item-title">${data.nombre || 'Equipo de Inventario'}</div>
+              <div class="item-detail"><strong>Código:</strong> ${data.codigo}</div>
+              <div class="item-detail"><strong>Categoría:</strong> ${data.categoria || 'N/A'}</div>
+              <div class="item-detail"><strong>Ubicación:</strong> ${data.ubicacion || 'N/A'}</div>
+              <div class="item-detail">
+                <strong>Estado:</strong> <span class="status">${data.estado || 'Desconocido'}</span>
+              </div>
+            `;
+          } else {
+            appContainer.innerHTML = `<p class="error">❌ ${res.error || res.message || 'Código no encontrado.'}</p>`;
+          }
+        })
+        .catch(err => {
+          console.error(err);
+          appContainer.innerHTML = `<p class="error">⚠️ Error al consultar los datos.</p>`;
+        });
+    }
+  </script>
+
+</body>
+</html>
